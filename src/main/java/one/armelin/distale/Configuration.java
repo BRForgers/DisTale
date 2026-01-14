@@ -106,7 +106,7 @@ public class Configuration {
 
         @Comment(value = """
                 Hytale -> Discord
-                Advancement/Achievement message
+                Advancement/Achievement message  (Not implemented yet)
                 Available placeholders:
                 %playername% | Player name
                 %achievement% | Achievement name""")
@@ -143,7 +143,7 @@ public class Configuration {
 
         @Comment(value = """
                 Hytale -> Discord
-                Crash message
+                Crash message (Not implemented yet)
                 Available placeholders:
                 %crashdescription% | Crash description""")
         public String crashMessage = "**Server crashed:** %crashdescription%";
