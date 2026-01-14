@@ -1,0 +1,92 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.gradle.plugin.idea-ext' version '1.3'
+    id 'com.gradleup.shadow' version '9.3.0'
+    id 'maven-publish'
+    id 'net.saliman.properties' version '1.6.0'
+}
+
+group = 'one.armelin'
+version = '1.0.0'
+
+configurations {
+    create("shade")
+    implementation {
+        extendsFrom(configurations["shade"])
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation(files("${project.HytaleInstallDir}/install/release/package/game/latest/Server/HytaleServer.jar"))
+
+    // Discord integration
+    implementation 'net.dv8tion:JDA:5.0.0-beta.20'
+    implementation 'club.minnced:discord-webhooks:0.8.4'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'blue.endless:jankson:1.2.3'
+
+    // Shadow dependencies to include in JAR
+    shade  'net.dv8tion:JDA:5.0.0-beta.20'
+    shade  'club.minnced:discord-webhooks:0.8.4'
+    shade  'com.squareup.okhttp3:okhttp:4.12.0'
+    shade  'blue.endless:jankson:1.2.3'
+}
+
+println("Using Hytale installation directory: ${project.HytaleInstallDir}")
+println("Using Hytale Server jar: ${project.HytaleInstallDir}/install/release/package/game/latest/Server/HytaleServer.jar")
+
+// Create the working directory to run the server if it does not already exist.
+def serverRunDir = file("$projectDir/run/server")
+if (!serverRunDir.exists()) {
+    serverRunDir.mkdirs()
+}
+
+// Creates a run configuration in IDEA that will run the Hytale server with
+// your plugin and the default assets.
+idea.project.settings.runConfigurations {
+    'HytaleServer'(org.jetbrains.gradle.ext.Application) {
+        mainClass = 'com.hypixel.hytale.Main'
+        moduleName = project.idea.module.name + '.main'
+        programParameters = "--allow-op --assets=${project.HytaleInstallDir}/install/release/package/game/latest/Assets.zip"
+        if (includes_pack.toBoolean()) {
+            programParameters += " --mods=${sourceSets.main.java.srcDirs.first().parentFile.absolutePath}"
+        }
+        if (load_user_mods.toBoolean()) {
+            programParameters += " --mods=${project.HytaleInstallDir}/UserData/Mods"
+        }
+        workingDirectory = serverRunDir.absolutePath
+    }
+}
+
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
+tasks.shadowJar {
+    archiveClassifier.set('')
+    configurations = [project.configurations.shade]
+    exclude 'META-INF/maven/**'
+    exclude 'META-INF/services/cpw.**', 'META-INF/services/org.spongepowered.tools.obfuscation.service.IObfuscationService'
+    exclude 'com/google/gson/**', 'org/sat4j/**'
+    mergeServiceFiles()
+}
+
+//shadowJar {
+//    archiveClassifier.set('')
+//    // Relocate dependencies to avoid conflicts
+//    relocate 'net.dv8tion.jda', 'one.armelin.distale.lib.jda'
+//    relocate 'okhttp3', 'one.armelin.distale.lib.okhttp3'
+//    relocate 'okio', 'one.armelin.distale.lib.okio'
+//    relocate 'blue.endless.jankson', 'one.armelin.distale.lib.jankson'
+//    relocate 'com.neovisionaries', 'one.armelin.distale.lib.neovisionaries'
+//    relocate 'com.fasterxml.jackson', 'one.armelin.distale.lib.jackson'
+//    relocate 'org.apache.commons', 'one.armelin.distale.lib.commons'
+//    relocate 'org.slf4j', 'one.armelin.distale.lib.slf4j'
+//    relocate 'club.minnced', 'one.armelin.distale.lib.minnced'
+//}

@@ -1,0 +1,17 @@
+{
+  "Group": "armelin1",
+  "Name": "DisTale",
+  "Version": "1.0.0",
+  "Description": "Discord bridge for Hytale servers - Chat integration, announcements, and commands",
+  "Authors": [
+    {
+      "Name": "armelin1"
+    }
+  ],
+  "ServerVersion": "*",
+  "Main": "one.armelin.distale.DisTale",
+  "Dependencies": {},
+  "OptionalDependencies": {},
+  "DisabledByDefault": false,
+  "IncludesAssetPack": true
+}
