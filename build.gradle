@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'one.armelin'
-version = '1.0.0'
+version = '1.1.0'
 
 configurations {
     create("shade")
@@ -76,17 +76,3 @@ tasks.shadowJar {
     exclude 'com/google/gson/**', 'org/sat4j/**'
     mergeServiceFiles()
 }
-
-//shadowJar {
-//    archiveClassifier.set('')
-//    // Relocate dependencies to avoid conflicts
-//    relocate 'net.dv8tion.jda', 'one.armelin.distale.lib.jda'
-//    relocate 'okhttp3', 'one.armelin.distale.lib.okhttp3'
-//    relocate 'okio', 'one.armelin.distale.lib.okio'
-//    relocate 'blue.endless.jankson', 'one.armelin.distale.lib.jankson'
-//    relocate 'com.neovisionaries', 'one.armelin.distale.lib.neovisionaries'
-//    relocate 'com.fasterxml.jackson', 'one.armelin.distale.lib.jackson'
-//    relocate 'org.apache.commons', 'one.armelin.distale.lib.commons'
-//    relocate 'org.slf4j', 'one.armelin.distale.lib.slf4j'
-//    relocate 'club.minnced', 'one.armelin.distale.lib.minnced'
-//}

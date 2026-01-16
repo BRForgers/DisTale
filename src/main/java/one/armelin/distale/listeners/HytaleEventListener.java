@@ -22,6 +22,8 @@ import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import one.armelin.distale.DisTale;
+import one.armelin.distale.utils.MarkdownParser;
+import one.armelin.distale.utils.Utils;
 
 import java.util.Locale;
 
@@ -62,19 +64,26 @@ public class HytaleEventListener {
         String message = event.getContent();
 
         // Convert mentions
-//        Utils.Tuple<String, String> convertedPair = Utils.convertMentionsFromNames(message);
-//        String discordMessage = convertedPair.getFirst();
-//        String displayMessage = convertedPair.getSecond();
+        Utils.Tuple<String, String> convertedPair = Utils.convertMentionsFromNames(message);
+        String discordMessage = convertedPair.getFirst();
+        String displayMessage = convertedPair.getSecond();
 
         // Send via webhook or regular message
         if (DisTale.config.isWebhookEnabled && !DisTale.webhookId.isEmpty()) {
-            sendWebhookMessage(playerName, event.getSender().getUuid().toString(), message);
+            sendWebhookMessage(playerName, event.getSender().getUuid().toString(), discordMessage);
         } else {
             String formattedMessage = DisTale.config.texts.playerMessage
-                    .replace("%playername%", MarkdownSanitizer.escape(playerName))
-                    .replace("%playermessage%", message);
+                    .replace("%playername%", playerName)
+                    .replace("%playermessage%", discordMessage);
 
             DisTale.textChannel.sendMessage(formattedMessage).queue();
+        }
+
+        if(DisTale.config.modifyChatMessages){
+            event.setCancelled(true);
+            String gameMessage = playerName + ": " + displayMessage;
+            Message gameMsg = MarkdownParser.parseMarkdown(gameMessage);
+            DisTale.universe.sendMessage(gameMsg);
         }
     }
 

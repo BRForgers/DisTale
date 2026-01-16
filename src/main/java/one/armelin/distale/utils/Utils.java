@@ -1,7 +1,6 @@
 package one.armelin.distale.utils;
 
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Role;
 import one.armelin.distale.DisTale;
 
 import java.util.List;
@@ -19,15 +18,11 @@ public class Utils {
      * Removes or replaces special characters that could cause formatting issues
      *
      * @param text Text to sanitize
-     * @param sanitizeLineBreak Whether to remove line breaks
+     * @param force Ignore configuration and force sanitization
      * @return Sanitized text
      */
-    public static String sanitize(String text, boolean sanitizeLineBreak) {
-        if (DisTale.config.texts.removeVanillaFormattingFromDiscord) {
-            text = text.replace("§", "&");
-        }
-
-        if (sanitizeLineBreak && DisTale.config.texts.removeLineBreakFromDiscord) {
+    public static String sanitize(String text, boolean force) {
+        if (DisTale.config.texts.removeLineBreakFromDiscord || force) {
             text = text.replace("\n", " ");
         }
 
@@ -45,7 +40,7 @@ public class Utils {
         String discordMessage = message;
         String displayMessage = message;
 
-        if (!DisTale.config.membersIntents || DisTale.jda == null) {
+        if (!DisTale.config.membersIntents || DisTale.jda == null || !message.contains("@")) {
             return new Tuple<>(discordMessage, displayMessage);
         }
 
@@ -54,7 +49,7 @@ public class Utils {
             if (DisTale.textChannel.getType().isGuild()) {
                 var guildChannel = (net.dv8tion.jda.api.entities.channel.concrete.TextChannel) DisTale.textChannel;
                 var guild = guildChannel.getGuild();
-                List<Member> members = guild.getMembers();
+                List<Member> members = guild.getMemberCache().asList();
 
                 // Pattern to match @username or @"username with spaces"
                 Pattern mentionPattern = Pattern.compile("@(?:\"([^\"]+)\"|([^\\s]+))");
@@ -73,30 +68,14 @@ public class Utils {
                             discordMessage = discordMessage.replace(fullMatch, "<@" + member.getId() + ">");
 
                             // Keep @ mention in display message
-                            break;
-                        }
-                    }
-                }
-
-                // Handle role mentions
-                Pattern roleMentionPattern = Pattern.compile("@&(?:\"([^\"]+)\"|([^\\s]+))");
-                Matcher roleMatcher = roleMentionPattern.matcher(message);
-
-                while (roleMatcher.find()) {
-                    String roleName = roleMatcher.group(1) != null ? roleMatcher.group(1) : roleMatcher.group(2);
-
-                    // Find role by name
-                    for (Role role : guild.getRoles()) {
-                        if (role.getName().equalsIgnoreCase(roleName)) {
-                            String fullMatch = roleMatcher.group(0);
-                            discordMessage = discordMessage.replace(fullMatch, "<@&" + role.getId() + ">");
+                            displayMessage = displayMessage.replace(fullMatch, "**__@" + member.getEffectiveName() + "__**");
                             break;
                         }
                     }
                 }
             }
         } catch (Exception e) {
-            DisTale.LOGGER.atSevere().log("Error converting mentions" + e.getMessage());
+            DisTale.LOGGER.atSevere().withCause(e).log("Error converting mentions");
         }
 
         return new Tuple<>(discordMessage, displayMessage);
@@ -121,29 +100,5 @@ public class Utils {
         public B getSecond() {
             return second;
         }
-    }
-
-    /**
-     * Get player name from a player object
-     * (Placeholder - will be implemented with actual Hytale API)
-     *
-     * @param player Player object
-     * @return Player name
-     */
-    public static String getPlayerName(Object player) {
-        // TODO: Implement with actual Hytale player API
-        return player.toString();
-    }
-
-    /**
-     * Get player UUID from a player object
-     * (Placeholder - will be implemented with actual Hytale API)
-     *
-     * @param player Player object
-     * @return Player UUID
-     */
-    public static String getPlayerUUID(Object player) {
-        // TODO: Implement with actual Hytale player API
-        return "";
     }
 }

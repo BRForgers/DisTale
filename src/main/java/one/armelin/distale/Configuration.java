@@ -133,10 +133,7 @@ public class Configuration {
                 Replied message text, with gray color, goes before the colorless text, after colored text
                 Available placeholders:
                 %discordname% | Nickname of the replied user in the guild""")
-        public String replyText = "↪ %discordname%\n";
-
-        @Comment(value = "Replaces the § symbol with & in any Discord message to avoid formatted messages")
-        public Boolean removeVanillaFormattingFromDiscord = false;
+        public String replyText = "-> %discordname%\n";
 
         @Comment(value = "Removes line breaks from any Discord message to avoid spam")
         public Boolean removeLineBreakFromDiscord = false;
