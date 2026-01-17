@@ -1,7 +1,9 @@
 package one.armelin.distale.listeners;
 
+import com.hypixel.hytale.metrics.metric.HistoricMetric;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.world.commands.world.perf.WorldPerfCommand;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import one.armelin.distale.DisTale;
@@ -51,8 +53,8 @@ public class DiscordEventListener extends ListenerAdapter {
             handleConsoleCommand(event);
         } else if (message.startsWith("!online")) {
             handleOnlineCommand(event);
-//        } else if (message.startsWith("!tps")) {
-//            handleTpsCommand(event);
+        } else if (message.startsWith("!tps")) {
+            handleTpsCommand(event);
         } else if (message.startsWith("!help")) {
             handleHelpCommand(event);
         } else {
@@ -97,8 +99,16 @@ public class DiscordEventListener extends ListenerAdapter {
      * Handle !tps command - Show server TPS
      */
     private void handleTpsCommand(MessageReceivedEvent event) {
-        // TODO: Implement with actual Hytale server API
-        String response = "Server TPS: 20.0";
+        StringBuilder response = new StringBuilder("```\n");
+        response.append("=============== Server TPS ===============\n");
+        DisTale.universe.getWorlds().forEach( (name, world) -> {
+            int targetTps = world.getTps();
+            int tickStepNanos = world.getTickStepNanos();
+            HistoricMetric metrics = world.getBufferedTickLengthMetricSet();
+            double tps = WorldPerfCommand.tpsFromDelta(metrics.getLastValue(), tickStepNanos);
+            response.append(String.format("World '%s': %.2f TPS (Target: %s)\n", name, tps, targetTps));
+        });
+        response.append("```");
         event.getChannel().sendMessage(response).queue();
     }
 
