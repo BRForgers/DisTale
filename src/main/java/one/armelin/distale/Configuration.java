@@ -164,7 +164,8 @@ public class Configuration {
                 DisTale.LOGGER.atInfo().log("Configuration loaded from: " + configFile);
             } else {
                 config = new Configuration();
-                DisTale.LOGGER.atInfo().log("Creating default configuration at: " + configFile);
+                DisTale.LOGGER.atInfo().log("Creating default configuration at: %s", configFile);
+                DisTale.LOGGER.atWarning().log("Please configure the plugin before using it! Don't report issues without configuring first.");
             }
 
             // Save/update config file
@@ -172,6 +173,7 @@ public class Configuration {
 
         } catch (IOException | SyntaxError e) {
             DisTale.LOGGER.atSevere().withCause(e).log("Failed to load configuration, using defaults");
+            DisTale.LOGGER.atWarning().log("Please configure the plugin before using it! Don't report issues without configuring first.");
             config = new Configuration();
         }
 

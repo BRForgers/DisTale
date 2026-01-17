@@ -76,7 +76,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
         DisTale.commandManager.handleCommand(discordCommandSender, command);
 
-        DisTale.LOGGER.atInfo().log("Admin " + event.getAuthor().getEffectiveName() + " executed command via Discord: " + command);
+        DisTale.LOGGER.atInfo().log("Admin %s executed command via Discord: %s", event.getAuthor().getName(), command);
     }
 
     /**
@@ -217,7 +217,7 @@ public class DiscordEventListener extends ListenerAdapter {
                 .insert(replyMessage)
                 .insert(colorlessMessage);
 
-        DisTale.LOGGER.atInfo().log("[Discord -> Hytale] " + discordName + ": " + messageContent);
+        DisTale.LOGGER.atInfo().log("[Discord -> Hytale] %s: %s", discordName ,messageContent);
 
         DisTale.universe.sendMessage(finalMessage);
     }

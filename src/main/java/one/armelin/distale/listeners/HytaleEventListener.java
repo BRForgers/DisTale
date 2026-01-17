@@ -7,6 +7,7 @@ import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.event.EventRegistry;
+import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.event.events.player.PlayerChatEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerConnectEvent;
@@ -84,6 +85,7 @@ public class HytaleEventListener {
             String gameMessage = playerName + ": " + displayMessage;
             Message gameMsg = MarkdownParser.parseMarkdown(gameMessage);
             DisTale.universe.sendMessage(gameMsg);
+            HytaleLogger.getLogger().atInfo().log("%s: %s", playerName, displayMessage);
         }
     }
 
@@ -128,17 +130,12 @@ public class HytaleEventListener {
      * @param playerRef
      */
     static void onPlayerDeath(int index, ArchetypeChunk<EntityStore> chunk, Store<EntityStore> store, CommandBuffer<EntityStore> buffer, KillFeedEvent.Display event) {
-        DisTale.LOGGER.atInfo().log("Player death event received");
-
         Ref<EntityStore> victimRef = chunk.getReferenceTo(index);
         PlayerRef playerRef = store.getComponent(victimRef, PlayerRef.getComponentType());
 
         if (!DisTale.config.announceDeaths || DisTale.stop || DisTale.jda == null || playerRef == null) {
             return;
         }
-
-//        // TODO: Extract player and death message from actual event
-
 
         String playerName = playerRef.getUsername();
 
@@ -221,7 +218,7 @@ public class HytaleEventListener {
             DisTale.webhookClient.newCall(request).execute().close();
 
         } catch (Exception ex) {
-            DisTale.LOGGER.atSevere().log("Failed to send webhook message", ex);
+            DisTale.LOGGER.atSevere().withCause(ex).log("Failed to send webhook message");
         }
     }
 }

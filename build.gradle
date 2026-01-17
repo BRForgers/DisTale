@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'one.armelin'
-version = '1.1.0'
+version = '1.1.1'
 
 configurations {
     create("shade")
@@ -24,13 +24,13 @@ dependencies {
     implementation(files("${project.HytaleInstallDir}/install/release/package/game/latest/Server/HytaleServer.jar"))
 
     // Discord integration
-    implementation 'net.dv8tion:JDA:5.0.0-beta.20'
+    implementation 'net.dv8tion:JDA:5.6.1'
     implementation 'club.minnced:discord-webhooks:0.8.4'
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     implementation 'blue.endless:jankson:1.2.3'
 
     // Shadow dependencies to include in JAR
-    shade  'net.dv8tion:JDA:5.0.0-beta.20'
+    shade  'net.dv8tion:JDA:5.6.1'
     shade  'club.minnced:discord-webhooks:0.8.4'
     shade  'com.squareup.okhttp3:okhttp:4.12.0'
     shade  'blue.endless:jankson:1.2.3'
@@ -45,13 +45,30 @@ if (!serverRunDir.exists()) {
     serverRunDir.mkdirs()
 }
 
+tasks.register('updatePluginManifest') {
+    def manifestFile = file('src/main/resources/manifest.json')
+    doLast {
+        if (!manifestFile.exists()) {
+            throw new GradleException("Could not find manifest.json at ${manifestFile.path}!")
+        }
+        def manifestJson = new groovy.json.JsonSlurper().parseText(manifestFile.text)
+        manifestJson.Version = version
+        manifestJson.IncludesAssetPack = includes_pack.toBoolean()
+        manifestFile.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(manifestJson))
+    }
+}
+
+tasks.named('processResources') {
+    dependsOn 'updatePluginManifest'
+}
+
 // Creates a run configuration in IDEA that will run the Hytale server with
 // your plugin and the default assets.
 idea.project.settings.runConfigurations {
     'HytaleServer'(org.jetbrains.gradle.ext.Application) {
         mainClass = 'com.hypixel.hytale.Main'
         moduleName = project.idea.module.name + '.main'
-        programParameters = "--allow-op --assets=${project.HytaleInstallDir}/install/release/package/game/latest/Assets.zip"
+        programParameters = "--allow-op --disable-sentry --assets=${project.HytaleInstallDir}/install/release/package/game/latest/Assets.zip"
         if (includes_pack.toBoolean()) {
             programParameters += " --mods=${sourceSets.main.java.srcDirs.first().parentFile.absolutePath}"
         }

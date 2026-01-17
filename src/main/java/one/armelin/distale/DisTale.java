@@ -20,7 +20,6 @@ import one.armelin.distale.listeners.DiscordEventListener;
 import one.armelin.distale.listeners.HytaleEventListener;
 
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -118,7 +117,7 @@ public class DisTale extends JavaPlugin {
             DisTale.textChannel = DisTale.jda.getChannelById(MessageChannel.class, config.channelId);
 
             if (DisTale.textChannel == null) {
-                LOGGER.atSevere().log("Could not find Discord channel with ID: {}", config.channelId);
+                LOGGER.atSevere().log("Could not find Discord channel with ID: %s", config.channelId);
                 return;
             }
 
@@ -126,11 +125,15 @@ public class DisTale extends JavaPlugin {
 
         } catch (InvalidTokenException ex) {
             jda = null;
-            LOGGER.atSevere().log("Invalid Discord bot token!", ex);
+            LOGGER.atSevere().withCause(ex).log("Invalid Discord bot token!");
             return;
         } catch (InterruptedException ex) {
             jda = null;
-            LOGGER.atSevere().log("Failed to connect to Discord", ex);
+            LOGGER.atSevere().withCause(ex).log("Failed to connect to Discord");
+            return;
+        } catch (Exception ex) {
+            jda = null;
+            LOGGER.atSevere().withCause(ex).log("An error occurred while connecting to Discord");
             return;
         }
 
@@ -158,7 +161,7 @@ public class DisTale extends JavaPlugin {
                 textChannel.sendMessage(config.texts.serverStopped).queue();
                 Thread.sleep(250);
             } catch (InterruptedException e) {
-                LOGGER.atSevere().log("Error sending shutdown message", e);
+                LOGGER.atSevere().withCause(e).log("Error sending shutdown message");
             }
 
             // Cleanup webhook client
@@ -170,7 +173,7 @@ public class DisTale extends JavaPlugin {
             try {
                 Thread.sleep(250);
             } catch (InterruptedException e) {
-                LOGGER.atSevere().log("Error during JDA shutdown", e);
+                LOGGER.atSevere().withCause(e).log("Error during JDA shutdown");
             }
         }
 
