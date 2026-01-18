@@ -18,9 +18,13 @@ import one.armelin.distale.commands.ShrugCommand;
 import one.armelin.distale.listeners.DeathEventListener;
 import one.armelin.distale.listeners.DiscordEventListener;
 import one.armelin.distale.listeners.HytaleEventListener;
+import one.armelin.distale.utils.ExpiringMap;
 
+import java.awt.image.BufferedImage;
 import java.nio.file.Files;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,6 +45,9 @@ public class DisTale extends JavaPlugin {
     public static Universe universe;
     public static CommandManager commandManager;
 
+    public static Map<String, BufferedImage> playerSkins = new HashMap<>();
+    public static ExpiringMap<String, String> skinsUrls = new ExpiringMap<>();
+
     public static OkHttpClient webhookClient = new OkHttpClient.Builder()
             .protocols(Collections.singletonList(Protocol.HTTP_1_1))
             .build();
@@ -52,6 +59,7 @@ public class DisTale extends JavaPlugin {
         instance = this;
 
         LOGGER.atInfo().log("DisTale initializing...");
+        System.setProperty("net.dv8tion.jda.disableFallbackLogger", "true");
 
         // Load configuration (using plugins directory)
         if(!Files.exists(getDataDirectory())){
@@ -92,6 +100,7 @@ public class DisTale extends JavaPlugin {
     protected void shutdown() {
         super.shutdown();
         onDisable();
+        skinsUrls.shutdown();
     }
 
 

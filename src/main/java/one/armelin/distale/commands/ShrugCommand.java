@@ -3,15 +3,9 @@ package one.armelin.distale.commands;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
-import com.hypixel.hytale.server.core.command.system.CommandUtil;
-import com.hypixel.hytale.server.core.command.system.arguments.system.OptionalArg;
-import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
 import com.hypixel.hytale.server.core.console.ConsoleSender;
-import com.hypixel.hytale.server.core.event.events.player.PlayerChatEvent;
-import com.hypixel.hytale.server.core.universe.PlayerRef;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import one.armelin.distale.DisTale;
-import one.armelin.distale.listeners.HytaleEventListener;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -46,7 +40,7 @@ public class ShrugCommand extends AbstractCommand {
         String playerName = context.sender().getDisplayName();
 
         if (DisTale.config.isWebhookEnabled && !DisTale.webhookId.isEmpty()) {
-            sendWebhookMessage(playerName, context.sender().getUuid().toString(), message);
+            sendWebhookMessage(playerName, message);
         } else {
             String formattedMessage = DisTale.config.texts.playerMessage
                     .replace("%playername%", MarkdownSanitizer.escape(playerName))

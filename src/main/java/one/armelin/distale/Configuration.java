@@ -161,7 +161,7 @@ public class Configuration {
             if (Files.exists(configFile)) {
                 JsonObject configJson = jankson.load(configFile.toFile());
                 config = jankson.fromJson(configJson, Configuration.class);
-                DisTale.LOGGER.atInfo().log("Configuration loaded from: " + configFile);
+                DisTale.LOGGER.atInfo().log("Configuration loaded from: %s", configFile);
             } else {
                 config = new Configuration();
                 DisTale.LOGGER.atInfo().log("Creating default configuration at: %s", configFile);

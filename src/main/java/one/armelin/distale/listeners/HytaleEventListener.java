@@ -2,10 +2,7 @@ package one.armelin.distale.listeners;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.hypixel.hytale.component.ArchetypeChunk;
-import com.hypixel.hytale.component.CommandBuffer;
-import com.hypixel.hytale.component.Ref;
-import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.component.*;
 import com.hypixel.hytale.event.EventRegistry;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.Message;
@@ -16,6 +13,7 @@ import com.hypixel.hytale.server.core.modules.entity.component.DisplayNameCompon
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageCause;
 import com.hypixel.hytale.server.core.modules.entity.damage.event.KillFeedEvent;
+import com.hypixel.hytale.server.core.modules.entity.player.PlayerSkinComponent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
@@ -23,9 +21,10 @@ import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import one.armelin.distale.DisTale;
-import one.armelin.distale.utils.MarkdownParser;
-import one.armelin.distale.utils.Utils;
+import one.armelin.distale.utils.*;
 
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.Locale;
 
 /**
@@ -61,7 +60,9 @@ public class HytaleEventListener {
             return;
         }
 
-        String playerName = event.getSender().getUsername();
+        PlayerRef ref = event.getSender();
+
+        String playerName = ref.getUsername();
         String message = event.getContent();
 
         // Convert mentions
@@ -71,7 +72,7 @@ public class HytaleEventListener {
 
         // Send via webhook or regular message
         if (DisTale.config.isWebhookEnabled && !DisTale.webhookId.isEmpty()) {
-            sendWebhookMessage(playerName, event.getSender().getUuid().toString(), discordMessage);
+            sendWebhookMessage(playerName, discordMessage);
         } else {
             String formattedMessage = DisTale.config.texts.playerMessage
                     .replace("%playername%", playerName)
@@ -99,6 +100,25 @@ public class HytaleEventListener {
 
         String playerName = event.getPlayerRef().getUsername();
 
+        if(DisTale.config.isWebhookEnabled && !DisTale.webhookId.isEmpty()){
+            DisTale.LOGGER.atInfo().log("Generating skin for player %s", playerName);
+            PlayerSkinComponent playerSkinComponent = event.getHolder().getComponent(PlayerSkinComponent.getComponentType());
+            if(playerSkinComponent != null){
+                BufferedImage playerSkin = SkinUtils.buildFace(playerSkinComponent.getPlayerSkin());
+                DisTale.LOGGER.atInfo().log("Player %s face image (base64): %s", playerName, ImageUtils.imageToBase64(playerSkin, "png"));
+                DisTale.playerSkins.put(playerName, playerSkin);
+
+                try {
+                    String url = TmpFilesUploader.uploadImage(playerSkin);
+                    DisTale.LOGGER.atInfo().log("Player %s skin image uploaded: %s", playerName, url);
+                    DisTale.skinsUrls.put(playerName, url, 58 * 60 * 1000);
+                } catch (Exception e) {
+                    DisTale.LOGGER.atSevere().withCause(e).log("Failed to upload player %s skin", playerName);
+                }
+            } else {
+                DisTale.LOGGER.atWarning().log("PlayerSkinComponent is null for player %s", playerName);
+            }
+        }
         String message = DisTale.config.texts.joinServer
                 .replace("%playername%", MarkdownSanitizer.escape(playerName));
 
@@ -189,14 +209,27 @@ public class HytaleEventListener {
      * @param playerUuid Player's UUID
      * @param message Message content
      */
-    public static void sendWebhookMessage(String playerName, String playerUuid, String message) {
+    public static void sendWebhookMessage(String playerName, String message) {
         try {
             JsonObject body = new JsonObject();
             body.addProperty("username", playerName);
 
-            // Use UUID or nickname for avatar
-            //String avatarId = DisTale.config.useUUIDInsteadNickname ? playerUuid : playerName;
-            //body.addProperty("avatar_url", "https://placehold.co/400?text=" + playerName);
+            if(DisTale.skinsUrls.containsKey(playerName)){
+                String avatarUrl = DisTale.skinsUrls.get(playerName);
+                body.addProperty("avatar_url", avatarUrl);
+            }else{
+                if(DisTale.playerSkins.containsKey(playerName)){
+                    BufferedImage skinImage = DisTale.playerSkins.get(playerName);
+                    try {
+                        String url = TmpFilesUploader.uploadImage(skinImage);
+                        DisTale.LOGGER.atInfo().log("Player %s skin image uploaded: %s", playerName, url);
+                        DisTale.skinsUrls.put(playerName, url, 58 * 60 * 1000);
+                        body.addProperty("avatar_url", url);
+                    } catch (Exception e) {
+                        DisTale.LOGGER.atSevere().withCause(e).log("Failed to upload player %s skin", playerName);
+                    }
+                }
+            }
 
             // Configure allowed mentions
             JsonObject allowedMentions = new JsonObject();
