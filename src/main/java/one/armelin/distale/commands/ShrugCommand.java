@@ -1,5 +1,6 @@
 package one.armelin.distale.commands;
 
+import com.hypixel.hytale.protocol.GameMode;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
@@ -24,6 +25,7 @@ public class ShrugCommand extends AbstractCommand {
     public ShrugCommand() {
         super("shrug", "send a shrug emoticon in chat");
         this.setAllowsExtraArguments(true);
+        this.setPermissionGroup(GameMode.Adventure);
     }
 
 

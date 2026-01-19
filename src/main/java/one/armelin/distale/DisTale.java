@@ -58,7 +58,7 @@ public class DisTale extends JavaPlugin {
         super(init);
         instance = this;
 
-        LOGGER.atInfo().log("DisTale initializing...");
+        LOGGER.atInfo().log("DisTale v%s initializing...", this.getManifest().getVersion());
         System.setProperty("net.dv8tion.jda.disableFallbackLogger", "true");
 
         // Load configuration (using plugins directory)
