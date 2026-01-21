@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.hypixel.hytale.builtin.adventure.memories.memories.npc.NPCMemory;
 import com.hypixel.hytale.component.*;
+import com.hypixel.hytale.event.EventPriority;
 import com.hypixel.hytale.event.EventRegistry;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.Message;
@@ -18,6 +19,7 @@ import com.hypixel.hytale.server.core.modules.entity.damage.event.KillFeedEvent;
 import com.hypixel.hytale.server.core.modules.entity.player.PlayerSkinComponent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.hypixel.hytale.server.core.util.MessageUtil;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import okhttp3.MediaType;
 import okhttp3.Request;
@@ -42,7 +44,7 @@ public class HytaleEventListener {
      */
     public static void register(DisTale plugin, EventRegistry eventRegistry) {
         eventRegistry.register(PlayerConnectEvent.class, HytaleEventListener::onPlayerJoin);
-        eventRegistry.registerAsyncUnhandled(PlayerChatEvent.class, future -> future.thenApply(event  -> {
+        eventRegistry.registerAsyncGlobal(EventPriority.LAST ,PlayerChatEvent.class, future -> future.thenApply(event  -> {
             onPlayerChat(event);
             return event;
         }));
@@ -85,11 +87,12 @@ public class HytaleEventListener {
 
         if(DisTale.config.modifyChatMessages){
             event.setCancelled(true);
-            String gameMessage = playerName + ": " + displayMessage;
-            Message gameMsg = MarkdownConverter.toMessage(gameMessage.trim());
+            Message userPart = event.getFormatter().format(ref, "");
+            Message contentPart = MarkdownConverter.toMessage(displayMessage.trim());
+            Message gameMsg = Message.join(userPart, contentPart);
 
             DisTale.universe.sendMessage(gameMsg);
-            HytaleLogger.getLogger().atInfo().log("[Modified by Distale] %s: %s", playerName, displayMessage);
+            HytaleLogger.getLogger().atInfo().log("[Modified by Distale] %s", MessageUtil.toAnsiString(gameMsg).toAnsi());
         }
     }
 
