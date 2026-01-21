@@ -55,8 +55,11 @@ public class Configuration {
     @Comment(value = "Should announce when players join/leave the server?")
     public boolean announcePlayers = true;
 
-    @Comment(value = "Should announce when players get an advancement?")
+    @Comment(value = "Should announce when players get an advancement? (not implemented yet)")
     public boolean announceAdvancements = true;
+
+    @Comment(value = "Should announce when players discoveries an memory?")
+    public boolean announceMemories = true;
 
     @Comment(value = "Should announce when a player dies?")
     public boolean announceDeaths = true;
@@ -110,7 +113,15 @@ public class Configuration {
                 Available placeholders:
                 %playername% | Player name
                 %achievement% | Achievement name""")
-        public String achievement = "%playername% has achieved **[%achievement%]**";
+        public String achievement = "**%playername%** has achieved **[%achievement%]**";
+
+        @Comment(value = """
+                Hytale -> Discord
+                Memories message
+                Available placeholders:
+                %playername% | Player name
+                %memory% | Memory name""")
+        public String memory = "**%playername%** has discovered a new memory: **%memory%**";
 
         @Comment(value = """
                 Discord -> Hytale

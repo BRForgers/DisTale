@@ -1,14 +1,14 @@
 package one.armelin.distale.listeners;
 
 import com.hypixel.hytale.metrics.metric.HistoricMetric;
-import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.commands.world.perf.WorldPerfCommand;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import one.armelin.distale.DisTale;
 import one.armelin.distale.utils.DiscordCommandSender;
-import one.armelin.distale.utils.MarkdownParser;
+import one.armelin.distale.utils.TinyMsg;
+import one.armelin.distale.utils.markdown.MarkdownConverter;
 import one.armelin.distale.utils.Utils;
 import org.jetbrains.annotations.NotNull;
 
@@ -121,7 +121,7 @@ public class DiscordEventListener extends ListenerAdapter {
                 =============== DisTale Commands ===============
 
                 !online         - List online players
-                !tps            - Show server TPS (not implemented)
+                !tps            - Show server TPS
                 !console <cmd>  - Execute server command (admins only)
                 !help           - Show this help message
                 ```""";
@@ -137,17 +137,17 @@ public class DiscordEventListener extends ListenerAdapter {
 
         String discordName = event.getMember() != null ?
                 event.getMember().getEffectiveName() :
-                event. getAuthor().getName();
+                event.getAuthor().getName();
 
         Color userColor = Objects.requireNonNullElse(
                 event.getMember() != null ? event.getMember().getColor() : null,
-                Color. WHITE
+                Color.WHITE
         );
 
         String messageContent = event.getMessage().getContentDisplay();
 
         // Add attachment/embed indicators
-        if (!event. getMessage().getAttachments().isEmpty()) {
+        if (!event.getMessage().getAttachments().isEmpty()) {
             messageContent += " <att>";
         }
         if (!event.getMessage().getEmbeds().isEmpty()) {
@@ -156,57 +156,17 @@ public class DiscordEventListener extends ListenerAdapter {
 
         // Sanitize message content
         messageContent = Utils.sanitize(messageContent, false);
+        String markDownContent = MarkdownConverter.convert(messageContent).trim();
 
-        // Build the colored part (can contain full message)
-        String coloredTemplate = DisTale. config.texts.coloredText
-                .replace("%discordname%", discordName);
+        String coloredMessage = "<color:" + String.format("#%06x", userColor.getRGB() & 0x00FFFFFF) + ">" + DisTale.config.texts.coloredText
+                .replace("%discordname%", discordName).replace("%message%", markDownContent) + "</color>";
 
-        Message coloredMessage;
-        if (coloredTemplate.contains("%message%")) {
-            String[] coloredParts = coloredTemplate.split("%message%", -1);
-            coloredMessage = Message.raw("");
-
-            if (!coloredParts[0]. isEmpty()) {
-                coloredMessage.insert(Message.raw(coloredParts[0]).color(userColor));
-            }
-
-            // Parse markdown WITH user color
-            Message parsedMarkdownColored = MarkdownParser.parseMarkdown(messageContent, userColor);
-            coloredMessage.insert(parsedMarkdownColored);
-
-            if (coloredParts.length > 1 && !coloredParts[1].isEmpty()) {
-                coloredMessage.insert(Message.raw(coloredParts[1]).color(userColor));
-            }
-        } else {
-            coloredMessage = Message. raw(coloredTemplate).color(userColor);
-        }
-
-        // Build the colorless part (can contain full message)
-        String colorlessTemplate = DisTale.config.texts.colorlessText
-                .replace("%discordname%", discordName + (event.getAuthor().isBot() ? "[BOT]" : ""));
-
-        Message colorlessMessage;
-        if (colorlessTemplate. contains("%message%")) {
-            String[] colorlessParts = colorlessTemplate.split("%message%", -1);
-            colorlessMessage = Message.raw("");
-
-            if (!colorlessParts[0].isEmpty()) {
-                colorlessMessage.insert(Message.raw(colorlessParts[0]));
-            }
-
-            // Parse markdown WITHOUT color (null = no default color)
-            Message parsedMarkdownColorless = MarkdownParser.parseMarkdown(messageContent, null);
-            colorlessMessage. insert(parsedMarkdownColorless);
-
-            if (colorlessParts.length > 1 && !colorlessParts[1].isEmpty()) {
-                colorlessMessage.insert(Message.raw(colorlessParts[1]));
-            }
-        } else {
-            colorlessMessage = Message.raw(colorlessTemplate);
-        }
+        String colorlessMessage = DisTale.config.texts.colorlessText
+                .replace("%discordname%", discordName + (event.getAuthor().isBot() ? "[BOT]" : ""))
+                .replace("%message%", markDownContent);
 
         // Handle replied messages
-        Message replyMessage = Message.empty();
+        String replyMessage = "";
         if (event.getMessage().getReferencedMessage() != null) {
             String replyUser;
             if (event.getMessage().getReferencedMessage().getMember() != null) {
@@ -218,17 +178,12 @@ public class DiscordEventListener extends ListenerAdapter {
             String replyText = DisTale.config.texts.replyText
                     .replace("%discordname%", Utils.sanitize(replyUser, true));
 
-            replyMessage = Message.raw(replyText).color(Color.GRAY);
+            replyMessage += "<color:gray>" + replyText + "</color>";
         }
 
-        // Combine all parts
-        Message finalMessage = Message.empty()
-                .insert(coloredMessage)
-                .insert(replyMessage)
-                .insert(colorlessMessage);
+        String finalMessage =  coloredMessage + replyMessage + colorlessMessage;
 
-        DisTale.LOGGER.atInfo().log("[Discord -> Hytale] %s: %s", discordName ,messageContent);
-
-        DisTale.universe.sendMessage(finalMessage);
+        DisTale.universe.sendMessage(TinyMsg.parse(finalMessage));
+        DisTale.LOGGER.atInfo().log("[Discord -> Hytale] %s: %s", discordName, messageContent);
     }
 }

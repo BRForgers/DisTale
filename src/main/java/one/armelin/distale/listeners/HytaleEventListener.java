@@ -2,10 +2,12 @@ package one.armelin.distale.listeners;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.hypixel.hytale.builtin.adventure.memories.memories.npc.NPCMemory;
 import com.hypixel.hytale.component.*;
 import com.hypixel.hytale.event.EventRegistry;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.Message;
+import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.event.events.player.PlayerChatEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerConnectEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerDisconnectEvent;
@@ -22,8 +24,8 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import one.armelin.distale.DisTale;
 import one.armelin.distale.utils.*;
+import one.armelin.distale.utils.markdown.MarkdownConverter;
 
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.Locale;
 
@@ -84,9 +86,10 @@ public class HytaleEventListener {
         if(DisTale.config.modifyChatMessages){
             event.setCancelled(true);
             String gameMessage = playerName + ": " + displayMessage;
-            Message gameMsg = MarkdownParser.parseMarkdown(gameMessage);
+            Message gameMsg = MarkdownConverter.toMessage(gameMessage.trim());
+
             DisTale.universe.sendMessage(gameMsg);
-            HytaleLogger.getLogger().atInfo().log("%s: %s", playerName, displayMessage);
+            HytaleLogger.getLogger().atInfo().log("[Modified by Distale] %s: %s", playerName, displayMessage);
         }
     }
 
@@ -145,11 +148,8 @@ public class HytaleEventListener {
 
     /**
      * Handle player death event
-     *
-     * @param event     Player death event (placeholder type)
-     * @param playerRef
      */
-    static void onPlayerDeath(int index, ArchetypeChunk<EntityStore> chunk, Store<EntityStore> store, CommandBuffer<EntityStore> buffer, KillFeedEvent.Display event) {
+    public static void onPlayerDeath(int index, ArchetypeChunk<EntityStore> chunk, Store<EntityStore> store, CommandBuffer<EntityStore> buffer, KillFeedEvent.Display event) {
         Ref<EntityStore> victimRef = chunk.getReferenceTo(index);
         PlayerRef playerRef = store.getComponent(victimRef, PlayerRef.getComponentType());
 
@@ -202,11 +202,25 @@ public class HytaleEventListener {
         DisTale.textChannel.sendMessage(message).queue();
     }
 
+    public static void onMemoryDiscovered(Player player, NPCMemory npcMemory) {
+        if (!DisTale.config.announceMemories || DisTale.stop || DisTale.jda == null) {
+            return;
+        }
+
+        String playerName = player.getDisplayName();
+        String memoryName = Message.translation(npcMemory.getTitle()).getAnsiMessage();
+
+        String message = DisTale.config.texts.memory
+                .replace("%playername%", playerName)
+                .replace("%memory%", memoryName);
+
+        DisTale.textChannel.sendMessage(message).queue();
+    }
+
     /**
      * Send message via Discord webhook
      *
      * @param playerName Player's name
-     * @param playerUuid Player's UUID
      * @param message Message content
      */
     public static void sendWebhookMessage(String playerName, String message) {

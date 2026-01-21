@@ -15,9 +15,9 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
 import one.armelin.distale.commands.ShrugCommand;
-import one.armelin.distale.listeners.DeathEventListener;
-import one.armelin.distale.listeners.DiscordEventListener;
-import one.armelin.distale.listeners.HytaleEventListener;
+import one.armelin.distale.listeners.*;
+import one.armelin.distale.listeners.systems.BeforeGatherMemoriesSystem;
+import one.armelin.distale.listeners.systems.PlayerDeathSystem;
 import one.armelin.distale.utils.ExpiringMap;
 
 import java.awt.image.BufferedImage;
@@ -80,7 +80,8 @@ public class DisTale extends JavaPlugin {
         // Initialize Discord bot
         initializeDiscord();
         HytaleEventListener.register(this, getEventRegistry());
-        getEntityStoreRegistry().registerSystem(new DeathEventListener());
+        getEntityStoreRegistry().registerSystem(new PlayerDeathSystem());
+        getEntityStoreRegistry().registerSystem(new BeforeGatherMemoriesSystem());
         getCommandRegistry().registerCommand(new ShrugCommand());
     }
 

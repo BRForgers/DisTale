@@ -1,4 +1,4 @@
-package one.armelin.distale.utils;
+package one.armelin.distale.utils.markdown;
 
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.protocol.MaybeBool;
