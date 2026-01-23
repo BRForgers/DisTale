@@ -23,21 +23,22 @@ public class MarkdownConverter {
         MutableDataSet options = new MutableDataSet();
 
         options.set(Parser.EXTENSIONS, extensions);
+        options.set(Parser.LIST_BLOCK_PARSER, false);
+        options.set(Parser.BLOCK_QUOTE_PARSER, false);
         options.set(HtmlRenderer.ESCAPE_HTML, false);
         options.set(HtmlRenderer.ESCAPE_INLINE_HTML, false);
         options.set(HtmlRenderer.ESCAPE_HTML_BLOCKS, false);
 
         Parser parser = Parser.builder(options).build();
-        HtmlRenderer renderer = HtmlRenderer.builder(options)
+        HtmlRenderer renderer = HtmlRenderer.builder(options).escapeHtml(false)
                 .nodeRendererFactory(new DiscordToTinyMessage.TinyMessageRenderer.Factory())
                 .build();
-
-        Node document = parser.parse(markdown);
-        return renderer.render(document);
+        Node document = parser.parse(markdown.trim().replaceAll("¯\\\\_\\(ツ\\)_/¯", "¯\\\\\\\\_(ツ)\\\\_/¯"));
+        return renderer.render(document).trim();
     }
 
     public static Message toMessage(String input) {
-        return TinyMsg.parse(convert(input).trim());
+        return TinyMsg.parse(convert(input));
     }
 
 }

@@ -1,18 +1,22 @@
 package one.armelin.distale.commands;
 
 import com.hypixel.hytale.protocol.GameMode;
+import com.hypixel.hytale.server.core.HytaleServer;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.console.ConsoleSender;
-import net.dv8tion.jda.api.utils.MarkdownSanitizer;
+import com.hypixel.hytale.server.core.entity.entities.Player;
+import com.hypixel.hytale.server.core.event.events.player.PlayerChatEvent;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.util.MessageUtil;
 import one.armelin.distale.DisTale;
+import one.armelin.distale.utils.markdown.MarkdownConverter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
-
-import static one.armelin.distale.listeners.HytaleEventListener.sendWebhookMessage;
 
 /**
  * Shrug command for DisTale
@@ -33,22 +37,23 @@ public class ShrugCommand extends AbstractCommand {
     @Override
     protected CompletableFuture<Void> execute(@NotNull CommandContext context) {
         String rawArgs = context.getInputString().replace("shrug", "").trim();
-        String message = SHRUG + (rawArgs.isEmpty() ? "" : " " + rawArgs);
-        Message result = Message.translation("server.chat.broadcastMessage").param("username", context.sender().getDisplayName()).param("message", message);
+        String message = (rawArgs.isEmpty() ? "" : rawArgs + " ") + SHRUG;
 
-        DisTale.universe.sendMessage(result);
-        ConsoleSender.INSTANCE.sendMessage(result);
+        if(context.sender() instanceof Player) {
+            PlayerRef playerRef = DisTale.universe.getPlayer(context.sender().getUuid());
 
-        String playerName = context.sender().getDisplayName();
+            ArrayList<PlayerRef> targets = new java.util.ArrayList<>(DisTale.universe.getPlayers().stream().toList());
+            targets.removeIf(targetPlayerRef -> targetPlayerRef.getHiddenPlayersManager().isPlayerHidden(context.sender().getUuid()));
 
-        if (DisTale.config.isWebhookEnabled && !DisTale.webhookId.isEmpty()) {
-            sendWebhookMessage(playerName, message);
-        } else {
-            String formattedMessage = DisTale.config.texts.playerMessage
-                    .replace("%playername%", MarkdownSanitizer.escape(playerName))
-                    .replace("%playermessage%", message);
-
-            DisTale.textChannel.sendMessage(formattedMessage).queue();
+            HytaleServer.get().getEventBus().dispatchForAsync(PlayerChatEvent.class).dispatch(
+                    new PlayerChatEvent(playerRef, targets, message)
+            );
+        }else{
+            Message result = Message.translation("server.chat.broadcastMessage")
+                    .param("username", context.sender().getDisplayName())
+                    .param("message", MarkdownConverter.toMessage(message));
+            DisTale.universe.sendMessage(result);
+            ConsoleSender.INSTANCE.sendMessage(Message.raw(MessageUtil.toAnsiString(result).toAnsi()));
         }
         return CompletableFuture.completedFuture(null);
     }

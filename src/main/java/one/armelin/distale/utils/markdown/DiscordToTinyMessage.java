@@ -44,14 +44,14 @@ public class DiscordToTinyMessage {
             handlers.add(new NodeRenderingHandler<>(Code.class,
                     (node, context, html) -> {
                         html.raw("<mono>");
-                        html.text(node.getText().toString());
+                        html.raw(node.getText().toString());
                         html.raw("</mono>");
                     }));
 
             handlers.add(new NodeRenderingHandler<>(FencedCodeBlock.class,
                     (node, context, html) -> {
                         html.raw("<mono>");
-                        html.text(node.getContentChars().toString());
+                        html.raw(node.getContentChars().toString());
                         html.raw("</mono>");
                     }));
 
@@ -63,7 +63,7 @@ public class DiscordToTinyMessage {
 
             handlers.add(new NodeRenderingHandler<>(SoftLineBreak.class,
                     (node, context, html) -> {
-                        html.text(" ");
+                        html.raw("\n");
                     }));
 
             handlers.add(new NodeRenderingHandler<>(HardLineBreak.class,
@@ -95,6 +95,11 @@ public class DiscordToTinyMessage {
                     }));
 
             handlers.add(new NodeRenderingHandler<>(HtmlBlock.class,
+                    (node, context, html) -> {
+                        html.raw(node.getChars().toString());
+                    }));
+
+            handlers.add(new NodeRenderingHandler<>(Text.class,
                     (node, context, html) -> {
                         html.raw(node.getChars().toString());
                     }));
