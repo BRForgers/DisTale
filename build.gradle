@@ -1,3 +1,12 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.vineflower:vineflower:1.11.2'
+    }
+}
+
 plugins {
     id 'java'
     id 'org.jetbrains.gradle.plugin.idea-ext' version '1.3'
@@ -7,7 +16,50 @@ plugins {
 }
 
 group = 'one.armelin'
-version = '1.3.2'
+version = '1.3.3'
+
+def decomp(fileCollection) {
+    def jarFile = fileCollection.singleFile
+
+    if (jarFile.name.endsWith('.jar') && jarFile.exists()) {
+        def decompiled = new File(jarFile.parentFile, jarFile.name.replace('.jar', '-sources.jar'))
+
+        if (!decompiled.exists()) {
+            println "Decompiling ${jarFile.name}..."
+
+            def vineflowerJar = buildscript.configurations.classpath.find { it.name.contains('vineflower') }
+
+            println "Vineflower JAR: ${vineflowerJar}"
+            println "Input: ${jarFile.absolutePath}"
+            println "Output: ${decompiled.absolutePath}"
+
+            def process = new ProcessBuilder(
+                    'java',
+                    '-Xmx10G',
+                    '-cp',
+                    vineflowerJar.absolutePath,
+                    'org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler',
+                    jarFile.absolutePath,
+                    decompiled.absolutePath
+            )
+            process.redirectErrorStream(true)
+
+            def proc = process.start()
+
+            proc.inputStream.eachLine { line ->
+                println "  [Vineflower] ${line}"
+            }
+
+            def exitCode = proc.waitFor()
+            println "Exit code: ${exitCode}"
+            println "Decompiled JAR exists: ${decompiled.exists()}"
+        }
+
+        return files(jarFile)
+    }
+
+    return fileCollection
+}
 
 configurations {
     create("shade")
@@ -22,7 +74,7 @@ repositories {
 }
 
 dependencies {
-    implementation(files("${project.HytaleInstallDir}/install/release/package/game/latest/Server/HytaleServer.jar"))
+    implementation decomp(files("${project.HytaleInstallDir}/install/release/package/game/latest/Server/HytaleServer.jar"))
 
     // Discord integration
     implementation 'net.dv8tion:JDA:5.6.1'
@@ -42,9 +94,6 @@ dependencies {
     shade "com.vladsch.flexmark:flexmark-ext-autolink:0.64.8"
     shade 'com.vladsch.flexmark:flexmark-ext-escaped-character:0.64.8'
 }
-
-println("Using Hytale installation directory: ${project.HytaleInstallDir}")
-println("Using Hytale Server jar: ${project.HytaleInstallDir}/install/release/package/game/latest/Server/HytaleServer.jar")
 
 // Create the working directory to run the server if it does not already exist.
 def serverRunDir = file("$projectDir/run/server")
@@ -82,7 +131,8 @@ idea.project.settings.runConfigurations {
         if (load_user_mods.toBoolean()) {
             programParameters += " --mods=${project.HytaleInstallDir}/UserData/Mods"
         }
-        workingDirectory = serverRunDir.absolutePath
+        //workingDirectory = serverRunDir.absolutePath
+        workingDirectory = file("${project.ServerDir}").absolutePath
     }
 }
 
