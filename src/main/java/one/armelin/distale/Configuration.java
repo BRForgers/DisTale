@@ -30,8 +30,16 @@ public class Configuration {
     @Comment(value = "Webhook URL; see https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks")
     public String webhookURL = "";
 
-    @Comment(value = "Use UUID instead of nickname to request player head on webhook")
-    public Boolean useUUIDInsteadNickname = true;
+    @Comment(value = """
+            Avatar URL for webhook messages; only used if Webhook is enabled.
+            Available placeholders:
+            %uuid% | Player UUID
+            %username% | Player username
+            %json% | Full player skin JSON data
+            %base64% | Base64 url-safe encoded player skin JSON data
+            %query% | Query string player skin
+            """)
+    public String avatarUrl = "https://hytale.photo/skin/avatar.png?%query%";
 
     @Comment(value = "Sets if DisTale should send Bot messages to Hytale")
     public boolean allowBotMessages = false;

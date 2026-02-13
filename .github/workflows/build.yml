@@ -1,0 +1,39 @@
+name: Build
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: "!(contains(github.event.head_commit.message, 'ci skip') || contains(github.event.head_commit.message, 'skip ci'))"
+    steps:
+      - uses: actions/checkout@v2.2.0
+      - uses: joschi/setup-jdk@v2.3.0
+        with:
+          java-version: '25' # The OpenJDK version to make available on the path
+          architecture: 'x64' # defaults to 'x64'
+      - {
+        name: "Build with Gradle",
+        id: build,
+        run: "chmod +x gradlew && ./gradlew build",
+      }
+      - name: "Find JAR file"
+        id: find-jar
+        run: |
+          JAR_FILE=$(find build/libs -name "*.jar" -not -name "*sources*" -not -name "*javadoc*" | head -n 1)
+          echo "jar_file=$JAR_FILE" >> $GITHUB_OUTPUT
+          echo "Found JAR: $JAR_FILE"
+      - name: "Upload to CurseForge"
+        uses: itsmeow/curseforge-upload@v3
+        with:
+          file_path: "${{ steps.find-jar.outputs.jar_file }}"
+          game_endpoint: "legacy"
+          game_versions: "14284"
+          project_id: "1429009"
+          token: "${{ secrets.CURSE_UPLOAD_HYTALE }}"
+          changelog: ${{ github.event.head_commit.message }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            build/libs/

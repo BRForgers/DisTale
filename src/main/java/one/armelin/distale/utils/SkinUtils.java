@@ -225,7 +225,7 @@ public class SkinUtils {
                 if(playerSkinComponent != null){
                     PlayerSkin playerSkin = playerSkinComponent.getPlayerSkin();
                     DisTale.LOGGER.atInfo().log("Player %s face image (base64): %s", playerName, ImageUtils.imageToBase64(SkinUtils.buildFace(playerSkin), "png"));
-                    DisTale.playerSkins.put(playerName, SkinUtils.buildFace(playerSkin));
+                    //DisTale.playerSkins.put(playerName, SkinUtils.buildFace(playerSkin));
                 }
                 future.complete(null);
             } catch (Exception e) {

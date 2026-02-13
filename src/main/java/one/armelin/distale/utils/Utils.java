@@ -1,9 +1,14 @@
 package one.armelin.distale.utils;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import net.dv8tion.jda.api.entities.Member;
 import one.armelin.distale.DisTale;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -100,5 +105,31 @@ public class Utils {
         public B getSecond() {
             return second;
         }
+    }
+
+    public static String jsonToQueryString(String json) {
+        try {
+            Gson gson = new Gson();
+            JsonObject jsonObject = gson.fromJson(json, JsonObject.class);
+
+            StringJoiner joiner = new StringJoiner("&");
+
+            jsonObject.entrySet().forEach(entry -> {
+                if (!entry.getValue().isJsonNull()) {
+                    String key = entry.getKey();
+                    String value = URLEncoder.encode(
+                            entry.getValue().getAsString(),
+                            StandardCharsets.UTF_8
+                    );
+                    joiner.add(key + "=" + value);
+                }
+            });
+
+            return joiner.toString();
+
+        } catch (Exception e) {
+            DisTale.LOGGER.atSevere().withCause(e).log("Error converting JSON to query string");
+        }
+        return null;
     }
 }

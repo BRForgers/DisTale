@@ -15,8 +15,10 @@ plugins {
     id 'net.saliman.properties' version '1.6.0'
 }
 
+boolean ci = System.getenv("CI") == "true"
+
 group = 'one.armelin'
-version = '1.3.3'
+version = '1.4.0'
 
 def decomp(fileCollection) {
     def jarFile = fileCollection.singleFile
@@ -71,10 +73,13 @@ configurations {
 repositories {
     mavenCentral()
     maven { url 'https://jitpack.io' }
+    maven { url 'https://maven.hytale.com/release' }
 }
 
+def hytale = ci ? 'com.hypixel.hytale:Server:+' : decomp(files("${project.HytaleInstallDir}/install/release/package/game/latest/Server/HytaleServer.jar"))
+
 dependencies {
-    implementation decomp(files("${project.HytaleInstallDir}/install/release/package/game/latest/Server/HytaleServer.jar"))
+    implementation hytale
 
     // Discord integration
     implementation 'net.dv8tion:JDA:5.6.1'
@@ -93,12 +98,6 @@ dependencies {
     shade 'com.vladsch.flexmark:flexmark:0.64.8'
     shade "com.vladsch.flexmark:flexmark-ext-autolink:0.64.8"
     shade 'com.vladsch.flexmark:flexmark-ext-escaped-character:0.64.8'
-}
-
-// Create the working directory to run the server if it does not already exist.
-def serverRunDir = file("$projectDir/run/server")
-if (!serverRunDir.exists()) {
-    serverRunDir.mkdirs()
 }
 
 tasks.register('updatePluginManifest') {
@@ -131,7 +130,6 @@ idea.project.settings.runConfigurations {
         if (load_user_mods.toBoolean()) {
             programParameters += " --mods=${project.HytaleInstallDir}/UserData/Mods"
         }
-        //workingDirectory = serverRunDir.absolutePath
         workingDirectory = file("${project.ServerDir}").absolutePath
     }
 }
