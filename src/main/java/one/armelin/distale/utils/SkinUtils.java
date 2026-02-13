@@ -1,5 +1,6 @@
 package one.armelin.distale.utils;
 
+import com.google.gson.JsonObject;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.protocol.PlayerSkin;
 import com.hypixel.hytale.server.core.cosmetics.CosmeticRegistry;
@@ -12,11 +13,15 @@ import one.armelin.distale.DisTale;
 
 import javax.annotation.Nullable;
 import java.awt.image.BufferedImage;
-import java.util.Objects;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static one.armelin.distale.utils.ImageUtils.loadImageFromAsset;
+import static one.armelin.distale.utils.Utils.jsonToQueryString;
 
 public class SkinUtils {
     public static BufferedImage getSkinToneGradient(PlayerSkin playerSkin){
@@ -238,5 +243,140 @@ public class SkinUtils {
         } catch (InterruptedException | ExecutionException e) {
             DisTale.LOGGER.atSevere().withCause(e).log("Error generating skin for player %s", playerName);
         }
+    }
+
+    private static final Pattern PATTERN = Pattern.compile("%(json|base64|query)([*-])\\(([^)]+)\\)%|%(json|base64|query)%");
+
+    private static final Set<String> ALL_FIELDS = new HashSet<>(Arrays.asList(
+            "bodyCharacteristic", "underwear", "face", "eyes", "ears", "mouth",
+            "facialHair", "haircut", "eyebrows", "pants", "overpants", "undertop",
+            "overtop", "shoes", "headAccessory", "faceAccessory", "earAccessory",
+            "skinFeature", "gloves", "cape"
+    ));
+
+    public static String buildAvatarUrl(String urlTemplate, PlayerSkin skin, UUID uuid, String username) {
+        StringBuffer result = new StringBuffer();
+        Matcher matcher = PATTERN.matcher(urlTemplate);
+
+        while (matcher.find()) {
+            String type = matcher.group(1);
+            String operator = matcher.group(2);
+            String fieldsStr = matcher.group(3);
+
+            Set<String> fields = parseFields(operator, fieldsStr);
+            String replacement = serialize(skin, type, fields);
+
+            matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
+        }
+        matcher.appendTail(result);
+
+        String finalUrl = result.toString();
+        finalUrl = finalUrl.replace("%uuid%", uuid.toString());
+        finalUrl = finalUrl.replace("%username%", username);
+
+        return finalUrl;
+    }
+
+    private static Set<String> parseFields(String operator, String fieldsStr) {
+        if (operator == null || fieldsStr == null) {
+            return new HashSet<>(ALL_FIELDS);
+        }
+
+        String[] fieldArray = fieldsStr.split(",");
+        Set<String> specifiedFields = new HashSet<>();
+        for (String field : fieldArray) {
+            specifiedFields.add(field.trim());
+        }
+
+        if ("*".equals(operator)) {
+            return specifiedFields;
+        } else if ("-".equals(operator)) {
+            Set<String> result = new HashSet<>(ALL_FIELDS);
+            result.removeAll(specifiedFields);
+            return result;
+        }
+
+        return new HashSet<>(ALL_FIELDS);
+    }
+
+    private static String serialize(PlayerSkin skin, String type, Set<String> fields) {
+        JsonObject json = buildJsonObject(skin, fields);
+        String jsonString = json.toString();
+
+        return switch (type.toLowerCase()) {
+            case "json" -> jsonString;
+            case "base64" -> Base64.getUrlEncoder()
+                    .withoutPadding()
+                    .encodeToString(jsonString.getBytes(StandardCharsets.UTF_8));
+            case "query" -> jsonToQueryString(jsonString);
+            default -> "";
+        };
+    }
+
+    private static JsonObject buildJsonObject(PlayerSkin skin, Set<String> fields) {
+        JsonObject json = new JsonObject();
+
+        if (fields.contains("bodyCharacteristic") && skin.bodyCharacteristic != null) {
+            json.addProperty("bodyCharacteristic", skin.bodyCharacteristic);
+        }
+        if (fields.contains("underwear") && skin.underwear != null) {
+            json.addProperty("underwear", skin.underwear);
+        }
+        if (fields.contains("face") && skin.face != null) {
+            json.addProperty("face", skin.face);
+        }
+        if (fields.contains("eyes") && skin.eyes != null) {
+            json.addProperty("eyes", skin.eyes);
+        }
+        if (fields.contains("ears") && skin.ears != null) {
+            json.addProperty("ears", skin.ears);
+        }
+        if (fields.contains("mouth") && skin.mouth != null) {
+            json.addProperty("mouth", skin.mouth);
+        }
+        if (fields.contains("facialHair") && skin.facialHair != null) {
+            json.addProperty("facialHair", skin.facialHair);
+        }
+        if (fields.contains("haircut") && skin.haircut != null) {
+            json.addProperty("haircut", skin.haircut);
+        }
+        if (fields.contains("eyebrows") && skin.eyebrows != null) {
+            json.addProperty("eyebrows", skin.eyebrows);
+        }
+        if (fields.contains("pants") && skin.pants != null) {
+            json.addProperty("pants", skin.pants);
+        }
+        if (fields.contains("overpants") && skin.overpants != null) {
+            json.addProperty("overpants", skin.overpants);
+        }
+        if (fields.contains("undertop") && skin.undertop != null) {
+            json.addProperty("undertop", skin.undertop);
+        }
+        if (fields.contains("overtop") && skin.overtop != null) {
+            json.addProperty("overtop", skin.overtop);
+        }
+        if (fields.contains("shoes") && skin.shoes != null) {
+            json.addProperty("shoes", skin.shoes);
+        }
+        if (fields.contains("headAccessory") && skin.headAccessory != null) {
+            json.addProperty("headAccessory", skin.headAccessory);
+        }
+        if (fields.contains("faceAccessory") && skin.faceAccessory != null) {
+            json.addProperty("faceAccessory", skin.faceAccessory);
+        }
+        if (fields.contains("earAccessory") && skin.earAccessory != null) {
+            json.addProperty("earAccessory", skin.earAccessory);
+        }
+        if (fields.contains("skinFeature") && skin.skinFeature != null) {
+            json.addProperty("skinFeature", skin.skinFeature);
+        }
+        if (fields.contains("gloves") && skin.gloves != null) {
+            json.addProperty("gloves", skin.gloves);
+        }
+        if (fields.contains("cape") && skin.cape != null) {
+            json.addProperty("cape", skin.cape);
+        }
+
+        return json;
     }
 }

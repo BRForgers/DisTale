@@ -33,11 +33,23 @@ public class Configuration {
     @Comment(value = """
             Avatar URL for webhook messages; only used if Webhook is enabled.
             Available placeholders:
+            -- User info --
             %uuid% | Player UUID
             %username% | Player username
+            -- Skin info --
             %json% | Full player skin JSON data
             %base64% | Base64 url-safe encoded player skin JSON data
             %query% | Query string player skin
+            - Skin info filters -
+            type can be any of skin info (json, base64, query)
+            %type*(field1, field2)% | Extracts only specified fields from the skin info
+            %type-(field1, field2)% | Removes specified fields from the skin info, keeping the rest of the data
+            Fields: bodyCharacteristic, underwear, face, eyes, ears, mouth, facialHair,\s
+                    haircut, eyebrows, pants, overpants, undertop, overtop, shoes,\s
+                    headAccessory, faceAccessory, earAccessory, skinFeature, gloves, cape
+            Examples:
+            %query-(headAccessory,faceAccessory,earAccessory,cape)% removes accessories from the query string
+            %query*(face,eyes,mouth,haircut)% keeps only face, eyes, mouth and haircut in the query string
             """)
     public String avatarUrl = "https://hytale.photo/skin/avatar.png?%query%";
 

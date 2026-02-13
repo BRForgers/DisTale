@@ -30,9 +30,8 @@ import one.armelin.distale.DisTale;
 import one.armelin.distale.utils.*;
 import one.armelin.distale.utils.markdown.MarkdownConverter;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Locale;
+import java.util.UUID;
 
 /**
  * Hytale event listener for DisTale
@@ -212,29 +211,20 @@ public class HytaleEventListener {
     /**
      * Send message via Discord webhook
      *
-     * @param playerName Player's name
+     * @param playerRef Player
      * @param message Message content
      */
     public static void sendWebhookMessage(PlayerRef playerRef, String message) {
         try {
+            String playerName = playerRef.getUsername();
+            UUID playerUuid = playerRef.getUuid();
+
             JsonObject body = new JsonObject();
-            body.addProperty("username", playerRef.getUsername());
+            body.addProperty("username", playerName);
 
-            PlayerSkin playerSkin = DisTale.playerSkinCache.get(playerRef.getUuid());
+            PlayerSkin playerSkin = DisTale.playerSkinCache.get(playerUuid);
 
-            Gson gson = new Gson();
-            String skinJson = gson.toJson(playerSkin);
-            String skinBase64 =  Base64.getUrlEncoder()
-                    .withoutPadding()
-                    .encodeToString(skinJson.getBytes(StandardCharsets.UTF_8));
-            String skinQuery = Utils.jsonToQueryString(skinJson);
-
-            String avatarUrl = DisTale.config.avatarUrl
-                    .replace("%uuid%", playerRef.getUuid().toString())
-                    .replace("%username%", playerRef.getUsername())
-                    .replace("%json%", skinJson)
-                    .replace("%base64%", skinBase64)
-                    .replace("%query%", skinQuery);
+            String avatarUrl = SkinUtils.buildAvatarUrl(DisTale.config.avatarUrl, playerSkin, playerUuid, playerName);
 
             body.addProperty("avatar_url", avatarUrl);
 
