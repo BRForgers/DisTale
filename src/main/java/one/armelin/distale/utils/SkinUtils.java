@@ -245,8 +245,9 @@ public class SkinUtils {
         }
     }
 
-    private static final Pattern PATTERN = Pattern.compile("%(json|base64|query)([*-])\\(([^)]+)\\)%|%(json|base64|query)%");
-
+    private static final Pattern PATTERN = Pattern.compile(
+            "%(json|base64|query)(?:([*-])\\(([^)]+)\\))?%"
+    );
     private static final Set<String> ALL_FIELDS = new HashSet<>(Arrays.asList(
             "bodyCharacteristic", "underwear", "face", "eyes", "ears", "mouth",
             "facialHair", "haircut", "eyebrows", "pants", "overpants", "undertop",
@@ -259,6 +260,7 @@ public class SkinUtils {
         Matcher matcher = PATTERN.matcher(urlTemplate);
 
         while (matcher.find()) {
+
             String type = matcher.group(1);
             String operator = matcher.group(2);
             String fieldsStr = matcher.group(3);
