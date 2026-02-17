@@ -85,6 +85,9 @@ public class DiscordEventListener extends ListenerAdapter {
      * Handle !online command - List online players
      */
     private void handleOnlineCommand(MessageReceivedEvent event) {
+        if(DisTale.universe == null){
+            event.getChannel().sendMessage("Universe is not ready.").queue();
+        }
         java.util.List<PlayerRef> players = DisTale.universe.getPlayers();
 
         StringBuilder response = new StringBuilder("```\n");
@@ -99,6 +102,9 @@ public class DiscordEventListener extends ListenerAdapter {
      * Handle !tps command - Show server TPS
      */
     private void handleTpsCommand(MessageReceivedEvent event) {
+        if(DisTale.universe == null){
+            event.getChannel().sendMessage("Universe is not ready.").queue();
+        }
         StringBuilder response = new StringBuilder("```\n");
         response.append("=============== Server TPS ===============\n");
         DisTale.universe.getWorlds().forEach( (name, world) -> {
@@ -182,6 +188,10 @@ public class DiscordEventListener extends ListenerAdapter {
         }
 
         String finalMessage =  coloredMessage + replyMessage + colorlessMessage;
+
+        if(DisTale.universe == null){
+            return;
+        }
 
         DisTale.universe.sendMessage(TinyMsg.parse(finalMessage));
         DisTale.LOGGER.atInfo().log("[Discord -> Hytale] %s: %s", discordName, messageContent);

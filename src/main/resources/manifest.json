@@ -1,7 +1,7 @@
 {
     "Group": "armelin1",
     "Name": "DisTale",
-    "Version": "1.4.2",
+    "Version": "1.4.3",
     "Description": "Discord bridge for Hytale servers - Chat integration, announcements, and commands",
     "Authors": [
         {
