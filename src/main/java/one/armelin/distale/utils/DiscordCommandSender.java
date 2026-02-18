@@ -43,7 +43,7 @@ public class DiscordCommandSender  implements CommandSender {
         if(attributedString.length() > 1900){
             DisTale.textChannel.sendMessage("> Result too long").setFiles(FileUpload.fromData(attributedString.toString().getBytes(StandardCharsets.UTF_8), "result.txt")).queue();
         }else {
-            DisTale.textChannel.sendMessage("> ```\n" + attributedString.toString().replaceAll("(?m)^", "> ") + "> ```").queue();
+            DisTale.textChannel.sendMessage("> ```\n" + attributedString.toString().stripTrailing().replaceAll("(?m)^", "> ") + "\n> ```").queue();
         }
     }
 }
