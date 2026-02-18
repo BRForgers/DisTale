@@ -1,17 +1,21 @@
 package one.armelin.distale;
 
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.logger.backend.HytaleLoggerBackend;
 import com.hypixel.hytale.protocol.PlayerSkin;
 import com.hypixel.hytale.server.core.command.system.CommandManager;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.hypixel.hytale.server.core.universe.Universe;
+import com.hypixel.hytale.server.core.universe.world.World;
+import com.hypixel.hytale.server.core.universe.world.WorldConfig;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.exceptions.InvalidTokenException;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
@@ -19,12 +23,15 @@ import one.armelin.distale.commands.ShrugCommand;
 import one.armelin.distale.listeners.*;
 import one.armelin.distale.listeners.systems.BeforeGatherMemoriesSystem;
 import one.armelin.distale.listeners.systems.PlayerDeathSystem;
+import one.armelin.distale.utils.ObservableCopyOnWriteArrayList;
 
 import java.nio.file.Files;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,6 +60,43 @@ public class DisTale extends JavaPlugin {
 
     private static DisTale instance;
 
+    private static final ObservableCopyOnWriteArrayList<LogRecord> logWatcher = new ObservableCopyOnWriteArrayList<>(record -> {
+        if(jda == null || stop || !config.announceCrashes) return;
+        if(record.getLevel() == Level.SEVERE && record.getThrown() != null){
+            if (record.getLoggerName().equals("Hytale")){
+                Pattern pattern = Pattern.compile("Exception in thread Thread\\[#\\d+,([^,]+),[^\\]]*\\](?: potentially caused by (.+))?");
+                Matcher matcher = pattern.matcher(record.getMessage());
+                if (matcher.find()) {
+                    String threadName = matcher.group(1);
+                    String cause = matcher.group(2);
+                    if(threadName.startsWith("WorldThread")){
+                        String worldName = threadName.split(" - ")[1];
+                        Pattern uuidPattern = Pattern.compile("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}");
+                        Matcher uuidMatcher = uuidPattern.matcher(worldName);
+                        if (uuidMatcher.find()) {
+                            World world = universe.getWorld(matcher.group());
+                            if(world != null){
+                                worldName = world.getWorldConfig().getDisplayName() != null ? world.getWorldConfig().getDisplayName() : WorldConfig.formatDisplayName(world.getName());
+                            }
+                        }
+                        String msg;
+                        if(cause != null){
+                            msg = DisTale.config.texts.worldCrashWithCauseMessage
+                                    .replace("%worldname%", worldName)
+                                    .replace("%crashdescription%", MarkdownSanitizer.escape(record.getThrown().getMessage()))
+                                    .replace("%cause%", MarkdownSanitizer.escape(cause));
+                        } else {
+                            msg = DisTale.config.texts.worldCrashMessage
+                                    .replace("%worldname%", worldName)
+                                    .replace("%crashdescription%", MarkdownSanitizer.escape(record.getThrown().getMessage()));
+                        }
+                        textChannel.sendMessage(msg).queue();
+                    }
+                }
+            }
+        }
+    });
+
     public DisTale(JavaPluginInit init) {
         super(init);
         instance = this;
@@ -69,6 +113,8 @@ public class DisTale extends JavaPlugin {
             }
         }
         config = Configuration.getConfig(getDataDirectory());
+
+        HytaleLoggerBackend.subscribe(logWatcher);
 
         LOGGER.atInfo().log("DisTale initialized successfully!");
     }

@@ -175,6 +175,24 @@ public class Configuration {
                 Available placeholders:
                 %crashdescription% | Crash description""")
         public String crashMessage = "**Server crashed:** %crashdescription%";
+
+        @Comment(value = """
+                Hytale -> Discord
+                World crash message
+                Available placeholders:
+                %worldname% | World name
+                %crashdescription% | Crash description""")
+        public String worldCrashMessage = "**World %worldname% crashed:** %crashdescription%";
+
+        @Comment(value = """
+                Hytale -> Discord
+                World crash message
+                Available placeholders:
+                %worldname% | World name
+                %crashdescription% | Crash description
+                %cause% | Potential cause of crash
+                """)
+        public String worldCrashWithCauseMessage = "**World %worldname% crashed:** %crashdescription%\n**Potential cause:** %cause%";
     }
 
     /**
