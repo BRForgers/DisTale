@@ -5,11 +5,13 @@ import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandSender;
 import com.hypixel.hytale.server.core.console.ConsoleModule;
 import com.hypixel.hytale.server.core.util.MessageUtil;
+import net.dv8tion.jda.api.utils.FileUpload;
 import one.armelin.distale.DisTale;
 import org.jetbrains.annotations.NotNull;
 import org.jline.terminal.Terminal;
 import org.jline.utils.AttributedString;
 
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 public class DiscordCommandSender  implements CommandSender {
@@ -38,6 +40,10 @@ public class DiscordCommandSender  implements CommandSender {
         Terminal terminal = ConsoleModule.get().getTerminal();
         AttributedString attributedString = MessageUtil.toAnsiString(message);
         HytaleLoggerBackend.rawLog(attributedString.toAnsi(terminal));
-        DisTale.textChannel.sendMessage("> " + attributedString).queue();
+        if(attributedString.length() > 1900){
+            DisTale.textChannel.sendMessage("> Result too long").setFiles(FileUpload.fromData(attributedString.toString().getBytes(StandardCharsets.UTF_8), "result.txt")).queue();
+        }else {
+            DisTale.textChannel.sendMessage("> ```\n" + attributedString.toString().replaceAll("(?m)^", "> ") + "> ```").queue();
+        }
     }
 }

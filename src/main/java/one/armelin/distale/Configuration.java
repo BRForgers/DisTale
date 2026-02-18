@@ -192,16 +192,16 @@ public class Configuration {
             if (Files.exists(configFile)) {
                 JsonObject configJson = jankson.load(configFile.toFile());
                 config = jankson.fromJson(configJson, Configuration.class);
-                DisTale.LOGGER.atInfo().log("Configuration loaded from: %s", configFile);
-                DisTale.LOGGER.atInfo().log("modifyChatMessages: %s", config.modifyChatMessages);
-                DisTale.LOGGER.atInfo().log("botToken: %s", (config.botToken == null || config.botToken.isEmpty()) ? "<empty>" : "<redacted>");
-                DisTale.LOGGER.atInfo().log("isWebhookEnabled: %s", config.isWebhookEnabled);
-                DisTale.LOGGER.atInfo().log("webhookURL: %s", (config.webhookURL == null || config.webhookURL.isEmpty()) ? "<empty>" : "<redacted>");
-                DisTale.LOGGER.atInfo().log("allowBotMessages: %s", config.allowBotMessages);
-                DisTale.LOGGER.atInfo().log("channelId: %s", (config.channelId == null || config.channelId.isEmpty()) ? "<empty>" : "<redacted>");
-                DisTale.LOGGER.atInfo().log("membersIntents: %s", config.membersIntents);
-                DisTale.LOGGER.atInfo().log("announcePlayers: %s", config.announcePlayers);
-                DisTale.LOGGER.atInfo().log("announceDeaths: %s", config.announceDeaths);
+                DisTale.LOGGER.atConfig().log("Configuration loaded from: %s", configFile);
+                DisTale.LOGGER.atConfig().log("modifyChatMessages: %s", config.modifyChatMessages);
+                DisTale.LOGGER.atConfig().log("botToken: %s", (config.botToken == null || config.botToken.isEmpty()) ? "<empty>" : "<redacted>");
+                DisTale.LOGGER.atConfig().log("isWebhookEnabled: %s", config.isWebhookEnabled);
+                DisTale.LOGGER.atConfig().log("webhookURL: %s", (config.webhookURL == null || config.webhookURL.isEmpty()) ? "<empty>" : "<redacted>");
+                DisTale.LOGGER.atConfig().log("allowBotMessages: %s", config.allowBotMessages);
+                DisTale.LOGGER.atConfig().log("channelId: %s", (config.channelId == null || config.channelId.isEmpty()) ? "<empty>" : "<redacted>");
+                DisTale.LOGGER.atConfig().log("membersIntents: %s", config.membersIntents);
+                DisTale.LOGGER.atConfig().log("announcePlayers: %s", config.announcePlayers);
+                DisTale.LOGGER.atConfig().log("announceDeaths: %s", config.announceDeaths);
             } else {
                 config = new Configuration();
                 DisTale.LOGGER.atInfo().log("Creating default configuration at: %s", configFile);

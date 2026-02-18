@@ -1,10 +1,13 @@
 package one.armelin.distale.utils.logger;
 
+import com.hypixel.hytale.logger.HytaleLogger;
 import one.armelin.distale.DisTale;
 import org.slf4j.Marker;
 import org.slf4j.event.Level;
 import org.slf4j.helpers.LegacyAbstractLogger;
 import org.slf4j.helpers.MessageFormatter;
+
+import java.util.Objects;
 
 public class JDALogger extends LegacyAbstractLogger {
 
@@ -26,26 +29,30 @@ public class JDALogger extends LegacyAbstractLogger {
             Throwable throwable) {
 
         String message = MessageFormatter.arrayFormat(messagePattern, arguments).getMessage();
+        HytaleLogger logger = HytaleLogger.get(DisTale.NAME + "|JDA");
+        if(!Objects.equals(this.getClassOnlyName(), "JDA")){
+            logger = logger.getSubLogger(this.getClassOnlyName());
+        }
 
         switch (level) {
             case TRACE:
-                DisTale.LOGGER.atFinest().log("[%s] %s", this.getClassOnlyName(), message);
+                logger.atFinest().log(message);
                 break;
             case DEBUG:
-                DisTale.LOGGER.atFine().log("[%s] %s", this.getClassOnlyName(), message);
+                logger.atFine().log(message);
                 break;
             case INFO:
-                DisTale.LOGGER.atInfo().log("[%s] %s", this.getClassOnlyName(), message);
+                logger.atInfo().log(message);
                 break;
             case WARN:
-                DisTale.LOGGER.atWarning().log("[%s] %s", this.getClassOnlyName(), message);
+                logger.atWarning().log(message);
                 break;
             case ERROR:
+                var logBuilder = logger.atSevere();
                 if (throwable != null) {
-                    DisTale.LOGGER.atSevere().withCause(throwable).log("[%s] %s", this.getClassOnlyName(), message);
-                } else {
-                    DisTale.LOGGER.atSevere().log("[%s] %s", this.getClassOnlyName(), message);
+                    logBuilder.withCause(throwable).log(message);
                 }
+                logBuilder.log(message);
                 break;
         }
     }

@@ -94,7 +94,7 @@ public class HytaleEventListener {
             Message gameMsg = Message.join(userPart, contentPart);
 
             DisTale.universe.sendMessage(gameMsg);
-            HytaleLogger.getLogger().atInfo().log("[Modified by Distale] %s", MessageUtil.toAnsiString(gameMsg).toAnsi());
+            HytaleLogger.getLogger().getSubLogger("Modified by Distale").atInfo().log("%s", MessageUtil.toAnsiString(gameMsg).toAnsi());
         }
     }
 

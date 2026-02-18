@@ -194,6 +194,6 @@ public class DiscordEventListener extends ListenerAdapter {
         }
 
         DisTale.universe.sendMessage(TinyMsg.parse(finalMessage));
-        DisTale.LOGGER.atInfo().log("[Discord -> Hytale] %s: %s", discordName, messageContent);
+        DisTale.LOGGER.getSubLogger("Discord -> Hytale").atInfo().log("%s: %s", discordName, messageContent);
     }
 }

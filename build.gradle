@@ -18,7 +18,7 @@ plugins {
 boolean ci = System.getenv("CI") == "true"
 
 group = 'one.armelin'
-version = '1.4.3'
+version = '1.4.4'
 
 def decomp(fileCollection) {
     def jarFile = fileCollection.singleFile
